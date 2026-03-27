@@ -1,7 +1,10 @@
 export type CompQuestion =
-  | { type: "mcq"; q: string; opts: string[]; ans: number; exp: string }
+  | { type: "mcq"; q: string; opts: string[]; ans: number; exp: string; isAr?: boolean }
+  /** Arabic-prompt MCQ (same shape as mcq in prototype data) */
+  | { type: "ar"; q: string; opts: string[]; ans: number; exp?: string }
   | { type: "tf"; q: string; ans: 0 | 1; exp: string }
-  | { type: "fitb"; q: string; ans: string; exp: string }
+  | { type: "fitb"; q: string; ans: string; exp: string; blank?: string; opts?: string[] }
+  | { type: "fitb"; q: string; exp: string; blank: string; opts: string[] }
   | { type: "match"; q: string; pairs: { L: string; R: string }[]; ans?: number[]; exp?: string }
   | { type: "wb"; q: string; opts: string[]; ans: number; exp: string };
 
@@ -18,15 +21,18 @@ export interface VocabEntry {
   gulf?: string;
 }
 
+/** First row may be metadata (`readingMeta: true` + title/type/preRead/focusWords); lines use ar/en/… */
 export interface ReadingEntry {
-  readingMeta?: {
-    title: string;
-    type: string;
-    preRead: string;
-    focusWords: string[];
-  };
-  ar: string;
-  en: string;
+  readingMeta?: boolean;
+  title?: string;
+  type?: string;
+  preRead?: string;
+  focusWords?: string[];
+  /** Section break between paragraphs in long readings */
+  paraBreak?: boolean;
+  label?: string;
+  ar?: string;
+  en?: string;
   tr?: string;
   eg?: string;
   lev?: string;
@@ -55,6 +61,10 @@ export interface MasteryLesson {
   };
   vocab: VocabEntry[];
   reading: ReadingEntry[];
+  /** Extra reading comprehension block used in some lessons */
+  readingComp?: CompQuestion[];
+  /** Per-dialect line variants (e.g. egy, lev, gulf) */
+  dialects?: Record<string, ReadingEntry[]>;
   grammar: GrammarEntry[];
   comprehension: CompQuestion[];
   speaking: {
@@ -62,6 +72,8 @@ export interface MasteryLesson {
     promptAr: string;
     promptEn: string;
   };
+  /** Duplicated from MASTERY_QUIZZES for lesson runtime; optional if using bank only */
+  quiz?: CompQuestion[];
 }
 
 export interface ABCLesson {
@@ -71,6 +83,11 @@ export interface ABCLesson {
   youtubeId: string;
   xp: number;
   desc: string;
+  culture?: {
+    title: string;
+    body: string;
+    tip: string;
+  };
   keyPoints: string[];
   wordExamples?: string;
   letterForms: {

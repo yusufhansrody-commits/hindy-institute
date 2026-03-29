@@ -1,7 +1,12 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { createClient } from '@/lib/supabase/server';
 
-export default function GrammarReferencePage() {
+export default async function GrammarReferencePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   // Collect all grammar entries across all mastery lessons
   const allGrammar = MASTERY_CURRICULUM.flatMap((lesson) =>
     (lesson.grammar || []).map((g) => ({
@@ -14,7 +19,7 @@ export default function GrammarReferencePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--parchment)' }}>
-      <Navbar />
+      <Navbar initialUser={user} />
       <main style={{ paddingTop: '68px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
           {/* Header */}

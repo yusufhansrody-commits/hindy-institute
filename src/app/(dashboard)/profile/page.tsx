@@ -1,4 +1,8 @@
+import { SignOutButton } from '@/components/auth/SignOutButton';
+import { displayNameFromUser, initialsFromUser } from '@/lib/auth/display-name';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 const ACHIEVEMENTS = [
   { icon: '🌟', name: 'First Steps', earned: true, desc: 'Complete your first lesson' },
@@ -12,12 +16,26 @@ const ACHIEVEMENTS = [
   { icon: '🌙', name: 'Night Owl', earned: false, desc: 'Study after midnight' },
 ];
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login?next=/profile');
+  }
+
+  const meta = user.user_metadata as Record<string, string | undefined>;
+  const fullName = displayNameFromUser(user);
+  const initials = initialsFromUser(user);
+  const firstDefault = meta.first_name ?? '';
+  const lastDefault = meta.last_name ?? '';
+
   return (
     <div style={{ background: 'var(--parchment)', minHeight: 'calc(100vh - 68px)' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
 
-        {/* Profile Hero */}
         <div className="profile-card">
           <div className="profile-header">
             <div
@@ -29,9 +47,9 @@ export default function ProfilePage() {
               }}
             />
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <div className="profile-avatar">S</div>
-              <div className="profile-name">Student</div>
-              <div className="profile-email">student@hindy.com</div>
+              <div className="profile-avatar">{initials}</div>
+              <div className="profile-name">{fullName}</div>
+              <div className="profile-email">{user.email ?? ''}</div>
               <div
                 style={{
                   display: 'inline-flex',
@@ -50,14 +68,18 @@ export default function ProfilePage() {
                 🌱 Beginner
               </div>
               <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button className="btn btn-primary btn-sm">✏️ Edit Name</button>
+                <button type="button" className="btn btn-primary btn-sm">
+                  ✏️ Edit Name
+                </button>
                 <Link href="/learn/abc" className="btn btn-outline-white btn-sm">Continue Learning →</Link>
-                <Link href="/" className="btn btn-ghost btn-sm" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}>⬅ Sign Out</Link>
+                <SignOutButton
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem' }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Stats strip */}
           <div
             style={{
               display: 'grid',
@@ -97,7 +119,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Account Details */}
         <div className="profile-card">
           <div style={{ padding: '28px 32px' }}>
             <div
@@ -113,18 +134,28 @@ export default function ProfilePage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input className="form-input" type="text" placeholder="Your full name" defaultValue="Student" />
+                <label className="form-label">First Name</label>
+                <input className="form-input" type="text" placeholder="First name" defaultValue={firstDefault} />
               </div>
               <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input className="form-input" type="email" placeholder="your@email.com" defaultValue="student@hindy.com" />
+                <label className="form-label">Last Name</label>
+                <input className="form-input" type="text" placeholder="Last name" defaultValue={lastDefault} />
               </div>
+            </div>
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label">Email Address</label>
+              <input
+                className="form-input"
+                type="email"
+                defaultValue={user.email ?? ''}
+                readOnly
+                style={{ opacity: 0.85 }}
+              />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Native Language</label>
-                <select className="form-input">
+                <select className="form-input" defaultValue="English">
                   <option>English</option>
                   <option>Urdu</option>
                   <option>French</option>
@@ -136,7 +167,7 @@ export default function ProfilePage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Learning Goal</label>
-                <select className="form-input">
+                <select className="form-input" defaultValue="Read the Quran">
                   <option>Read the Quran</option>
                   <option>Travel to Arab countries</option>
                   <option>Connect with heritage</option>
@@ -155,11 +186,10 @@ export default function ProfilePage() {
                 style={{ resize: 'vertical' }}
               />
             </div>
-            <button className="btn btn-primary btn-sm">Save Changes</button>
+            <button type="button" className="btn btn-primary btn-sm">Save Changes</button>
           </div>
         </div>
 
-        {/* Course Progress */}
         <div className="profile-card">
           <div style={{ padding: '28px 32px' }}>
             <div
@@ -196,7 +226,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Achievements */}
         <div className="profile-card">
           <div style={{ padding: '28px 32px' }}>
             <div

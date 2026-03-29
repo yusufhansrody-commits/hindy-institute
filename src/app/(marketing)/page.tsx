@@ -1,3 +1,4 @@
+import { SiteLogo } from '@/components/layout/SiteLogo';
 import Link from 'next/link';
 
 const TESTIMONIALS = [
@@ -231,10 +232,7 @@ export default function HomePage() {
         <div className="footer-inner">
           <div className="footer-grid">
             <div>
-              <div className="nav-logo" style={{ marginBottom: '12px' }}>
-                <div className="nav-logo-mark arabic">ه</div>
-                <div className="nav-logo-text">Hindy <span>Institute</span></div>
-              </div>
+              <SiteLogo href="/" className="nav-logo" style={{ marginBottom: '12px', textDecoration: 'none' }} />
               <p className="footer-brand-desc">
                 A modern Arabic language institution combining classical pedagogy with cutting-edge learning
                 technology. We believe every Muslim deserves to read the Quran in its original language.

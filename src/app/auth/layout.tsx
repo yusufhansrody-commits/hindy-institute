@@ -1,7 +1,7 @@
 import { SiteLogo } from '@/components/layout/SiteLogo';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default function AuthSubLayout({ children }: { children: ReactNode }) {
   return (
     <main
       style={{
@@ -14,7 +14,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         position: 'relative',
       }}
     >
-      {/* Background pattern */}
       <div
         style={{
           position: 'absolute',
@@ -26,14 +25,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       />
 
       <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
-        {/* Logo */}
         <SiteLogo
           href="/"
           className="nav-logo"
           style={{ justifyContent: 'center', marginBottom: '32px', textDecoration: 'none' }}
         />
 
-        {/* Modal card */}
         <div className="modal" style={{ maxWidth: '100%' }}>
           {children}
         </div>

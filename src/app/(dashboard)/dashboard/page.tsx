@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { displayNameFromUser } from '@/lib/auth/display-name';
+import { createClient } from '@/lib/supabase/server';
 
 const LEADERBOARD = [
   { rank: '🥇', rankClass: 'gold', initials: 'ZA', name: 'Zara Ahmed', sub: "ABC's · Lesson 8", xp: '3,840 XP' },
@@ -25,7 +27,13 @@ const DAILY_CHALLENGES = [
 
 const todayChallenge = DAILY_CHALLENGES[new Date().getDay() % DAILY_CHALLENGES.length];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const greet = displayNameFromUser(user);
+
   return (
     <div style={{ background: 'var(--parchment)', minHeight: 'calc(100vh - 68px)' }}>
       <div className="dash-inner">
@@ -34,7 +42,7 @@ export default function DashboardPage() {
           <div className="dash-hero-bg" />
           <div style={{ zIndex: 1 }}>
             <div className="dash-greeting">
-              Ahlan, <span>Student</span>! 👋
+              Ahlan, <span>{greet}</span>! 👋
             </div>
             <div className="dash-sub">You&apos;re making great progress. Keep it up!</div>
             <div style={{ marginTop: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>

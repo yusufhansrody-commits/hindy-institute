@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description:
     "Learn Arabic online with Hindy Institute. Professional Arabic courses: Arabic ABC's (letters & reading) and Arabic Mastery (40-week intensive program). Live classes, AI tutoring, certificates.",
   keywords: 'learn Arabic, Arabic online, Arabic course, MSA, Hindy Institute, Arabic alphabet, Arabic mastery',
+  icons: {
+    icon: [{ url: '/icon-32.png', sizes: '32x32', type: 'image/png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   openGraph: {
     title: 'Hindy Institute — Arabic Language Learning',
     description: 'Professional Arabic courses with live virtual classes, AI tutors, and certificates.',

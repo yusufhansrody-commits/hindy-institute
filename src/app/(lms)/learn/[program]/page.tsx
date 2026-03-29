@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { ABC_CURRICULUM } from "@/data/abc-curriculum";
-import { MASTERY_CURRICULUM } from "@/data/mastery-curriculum";
-import { ArabicText } from "@/components/arabic/ArabicText";
+import Link from 'next/link';
+import { ABC_CURRICULUM } from '@/data/abc-curriculum';
+import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
 
 type ProgramPageProps = {
   params: Promise<{ program: string }>;
@@ -9,37 +8,82 @@ type ProgramPageProps = {
 
 export default async function ProgramLessonsPage({ params }: ProgramPageProps) {
   const { program } = await params;
-  const isAbc = program === "abc";
+  const isAbc = program === 'abc';
   const lessons = isAbc ? ABC_CURRICULUM : MASTERY_CURRICULUM;
+  const totalLessons = lessons.length;
+  const completedLessons = 1; // mock
+  const pct = Math.round((completedLessons / totalLessons) * 100);
 
   return (
-    <section>
-      <h1 className="font-heading text-4xl capitalize text-[var(--midnight)]">{program} lessons</h1>
-      <p className="mt-2 text-sm text-[var(--text-mid)]">Preview is open for lessons 1-3 in the current starter.</p>
-      <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {lessons.slice(0, 12).map((lesson) => {
-          const locked = lesson.id > 3;
-          return (
-            <article key={lesson.id} className="rounded-xl border border-[var(--border)] bg-white p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-[var(--text-light)]">Lesson {lesson.id}</p>
-                <p className="rounded-full bg-[var(--gold-pale)] px-2 py-1 text-xs text-[var(--gold)]">
-                  {lesson.xp} XP
-                </p>
-              </div>
-              <h2 className="mt-2 font-semibold text-[var(--text-dark)]">{lesson.title}</h2>
-              <ArabicText className="text-xl">{lesson.arabic}</ArabicText>
-              {locked ? (
-                <p className="mt-3 text-sm text-[var(--warning)]">Locked (trial gate)</p>
-              ) : (
-                <Link href={`/learn/${program}/${lesson.id}`} className="mt-3 inline-block text-sm underline">
-                  Open lesson
-                </Link>
-              )}
-            </article>
-          );
-        })}
-      </div>
-    </section>
+    <div className="lms-layout">
+      {/* Sidebar */}
+      <aside className="lms-sidebar">
+        <div className="sidebar-header">
+          <div className={`sidebar-course-badge ${isAbc ? 'abc' : 'mastery'}`}>
+            {isAbc ? '📖 Foundation' : '🌟 Advanced'}
+          </div>
+          <div className="sidebar-course-title">
+            {isAbc ? "Arabic ABC's" : 'Arabic Mastery'}
+          </div>
+          <div className="sidebar-progress-wrap">
+            <div className="sidebar-prog-bar">
+              <div className="sidebar-prog-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="sidebar-prog-label">{completedLessons} of {totalLessons} lessons complete</div>
+          </div>
+        </div>
+
+        {/* Lesson list */}
+        <div>
+          {lessons.map((lesson) => {
+            const isCompleted = lesson.id < completedLessons;
+            const isCurrent = lesson.id === completedLessons;
+            return (
+              <Link
+                key={lesson.id}
+                href={`/learn/${program}/${lesson.id}`}
+                className={`sidebar-lesson ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <div className={`lesson-status ${isCompleted ? 'done' : isCurrent ? 'current' : ''}`}>
+                  {isCompleted ? '✓' : lesson.id}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: isCurrent ? 600 : 400 }}>
+                    {lesson.title}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: '2px' }}>
+                    {lesson.xp} XP
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* Main area */}
+      <main className="lms-main" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 68px)', padding: '40px 24px' }}>
+        <div style={{ maxWidth: '560px', textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>
+            {isAbc ? '📖' : '🌟'}
+          </div>
+          <h1 style={{ fontFamily: 'var(--font-cormorant, Cormorant Garamond, serif)', fontSize: '2rem', color: 'var(--navy)', marginBottom: '12px' }}>
+            {isAbc ? "Arabic ABC's" : 'Arabic Mastery'}
+          </h1>
+          <p style={{ color: 'var(--text-mid)', marginBottom: '32px', lineHeight: 1.7 }}>
+            {isAbc
+              ? 'Master all 28 Arabic letters, vowels and Tajweed rules. Select a lesson from the sidebar to begin.'
+              : 'Build full conversational fluency through structured lessons. Select a lesson from the sidebar to begin.'}
+          </p>
+          <Link
+            href={`/learn/${program}/${completedLessons}`}
+            className="btn btn-primary btn-lg"
+          >
+            {completedLessons > 1 ? 'Continue' : 'Start'} Lesson {completedLessons} →
+          </Link>
+        </div>
+      </main>
+    </div>
   );
 }

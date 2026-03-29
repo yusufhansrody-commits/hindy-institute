@@ -1,20 +1,100 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function LoginPage() {
   return (
-    <div>
-      <h1 className="font-heading text-3xl text-[var(--midnight)]">Login</h1>
-      <p className="mt-2 text-sm text-[var(--text-mid)]">Supabase auth UI comes in the next phase.</p>
-      <form className="mt-6 space-y-3">
-        <input className="w-full rounded-md border border-[var(--border)] p-2" placeholder="Email" />
-        <input className="w-full rounded-md border border-[var(--border)] p-2" placeholder="Password" type="password" />
-        <button type="button" className="w-full rounded-md bg-[var(--midnight)] px-4 py-2 text-white">
-          Continue
+    <>
+      <div className="modal-header">
+        <div className="modal-title">Welcome Back</div>
+        <Link href="/" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '1.3rem', cursor: 'pointer', textDecoration: 'none' }}>✕</Link>
+      </div>
+      <div className="modal-body">
+        {/* Tabs */}
+        <div style={{ display: 'flex', marginBottom: '28px', borderBottom: '2px solid var(--border)' }}>
+          <Link
+            href="/login"
+            style={{
+              flex: 1,
+              padding: '10px',
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              color: 'var(--navy)',
+              borderBottom: '2px solid var(--navy)',
+              marginBottom: '-2px',
+              textDecoration: 'none',
+            }}
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/signup"
+            style={{
+              flex: 1,
+              padding: '10px',
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              color: 'var(--text-light)',
+              textDecoration: 'none',
+            }}
+          >
+            Create Account
+          </Link>
+        </div>
+
+        <form>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input className="form-input" type="email" placeholder="you@example.com" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input className="form-input" type="password" placeholder="Enter your password" />
+          </div>
+          <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+            <a href="#" style={{ fontSize: '0.8rem', color: 'var(--navy)', textDecoration: 'underline' }}>
+              Forgot password?
+            </a>
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Sign In
+          </button>
+        </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>or continue with</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+        </div>
+
+        <button
+          type="button"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            padding: '11px',
+            borderRadius: '8px',
+            border: '1.5px solid var(--border)',
+            background: 'white',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            color: 'var(--text-dark)',
+          }}
+        >
+          <span>G</span> Continue with Google
         </button>
-      </form>
-      <p className="mt-4 text-sm text-[var(--text-mid)]">
-        No account? <Link href="/signup" className="underline">Sign up</Link>
-      </p>
-    </div>
+
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-mid)' }}>
+          No account?{' '}
+          <Link href="/signup" style={{ color: 'var(--navy)', fontWeight: 600, textDecoration: 'underline' }}>
+            Sign up free
+          </Link>
+        </p>
+      </div>
+    </>
   );
 }

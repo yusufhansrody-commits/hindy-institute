@@ -1,10 +1,13 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ABC_CURRICULUM } from '@/data/abc-curriculum';
-import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { MarkLessonCompleteButton } from '@/components/lesson/MarkLessonCompleteButton';
 import { ArabicText } from '@/components/arabic/ArabicText';
 import { VocabCard } from '@/components/arabic/VocabCard';
 import { LessonStepper } from '@/components/lesson/LessonStepper';
+import { ABC_CURRICULUM } from '@/data/abc-curriculum';
+import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { createClient } from '@/lib/supabase/server';
+import { fetchCompletedLessonIds } from '@/lib/progress/lesson-completions';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 type LessonPageProps = {
   params: Promise<{ program: string; lesson: string }>;
@@ -19,9 +22,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   if (!entry) notFound();
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const prog = isAbc ? 'abc' : 'mastery';
+  const completedIds = user ? await fetchCompletedLessonIds(user.id, prog) : new Set<number>();
+  const completedCount = completedIds.size;
   const totalLessons = lessons.length;
-  const completedLessons = 1; // mock
-  const pct = Math.round((completedLessons / totalLessons) * 100);
+  const pct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const isCurrentLessonDone = completedIds.has(lessonId);
   const prevLesson = lessonId > 1 ? lessonId - 1 : null;
   const nextLesson = lessonId < totalLessons ? lessonId + 1 : null;
 
@@ -46,12 +56,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
             <div className="sidebar-prog-bar">
               <div className="sidebar-prog-fill" style={{ width: `${pct}%` }} />
             </div>
-            <div className="sidebar-prog-label">{completedLessons} of {totalLessons} lessons complete</div>
+            <div className="sidebar-prog-label">{completedCount} of {totalLessons} lessons complete</div>
           </div>
         </div>
 
         {lessons.map((l) => {
-          const isCompleted = l.id < completedLessons;
+          const isCompleted = completedIds.has(l.id);
           const isCurrent = l.id === lessonId;
           return (
             <Link
@@ -171,6 +181,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 </div>
               </div>
             )}
+
+            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+              <MarkLessonCompleteButton
+                program={program}
+                lessonId={lessonId}
+                defaultCompleted={isCurrentLessonDone}
+              />
+            </div>
           </div>
 
           {/* Navigation */}

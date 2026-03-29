@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { ABC_CURRICULUM } from '@/data/abc-curriculum';
 import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { fetchCompletedLessonIds } from '@/lib/progress/lesson-completions';
+import { createClient } from '@/lib/supabase/server';
 
 type ProgramPageProps = {
   params: Promise<{ program: string }>;
@@ -8,11 +11,24 @@ type ProgramPageProps = {
 
 export default async function ProgramLessonsPage({ params }: ProgramPageProps) {
   const { program } = await params;
+  if (program !== 'abc' && program !== 'mastery') {
+    notFound();
+  }
   const isAbc = program === 'abc';
   const lessons = isAbc ? ABC_CURRICULUM : MASTERY_CURRICULUM;
   const totalLessons = lessons.length;
-  const completedLessons = 1; // mock
-  const pct = Math.round((completedLessons / totalLessons) * 100);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const prog = isAbc ? 'abc' : 'mastery';
+  const completedIds = user ? await fetchCompletedLessonIds(user.id, prog) : new Set<number>();
+  const completedCount = completedIds.size;
+  const pct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+  const firstIncomplete = lessons.find((l) => !completedIds.has(l.id));
+  const resumeLessonId = firstIncomplete?.id ?? lessons[lessons.length - 1]!.id;
 
   return (
     <div className="lms-layout">
@@ -29,15 +45,15 @@ export default async function ProgramLessonsPage({ params }: ProgramPageProps) {
             <div className="sidebar-prog-bar">
               <div className="sidebar-prog-fill" style={{ width: `${pct}%` }} />
             </div>
-            <div className="sidebar-prog-label">{completedLessons} of {totalLessons} lessons complete</div>
+            <div className="sidebar-prog-label">{completedCount} of {totalLessons} lessons complete</div>
           </div>
         </div>
 
         {/* Lesson list */}
         <div>
           {lessons.map((lesson) => {
-            const isCompleted = lesson.id < completedLessons;
-            const isCurrent = lesson.id === completedLessons;
+            const isCompleted = completedIds.has(lesson.id);
+            const isCurrent = lesson.id === resumeLessonId;
             return (
               <Link
                 key={lesson.id}
@@ -76,11 +92,8 @@ export default async function ProgramLessonsPage({ params }: ProgramPageProps) {
               ? 'Master all 28 Arabic letters, vowels and Tajweed rules. Select a lesson from the sidebar to begin.'
               : 'Build full conversational fluency through structured lessons. Select a lesson from the sidebar to begin.'}
           </p>
-          <Link
-            href={`/learn/${program}/${completedLessons}`}
-            className="btn btn-primary btn-lg"
-          >
-            {completedLessons > 1 ? 'Continue' : 'Start'} Lesson {completedLessons} →
+          <Link href={`/learn/${program}/${resumeLessonId}`} className="btn btn-primary btn-lg">
+            {completedCount > 0 ? 'Continue' : 'Start'} lesson {resumeLessonId} →
           </Link>
         </div>
       </main>

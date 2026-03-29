@@ -37,7 +37,8 @@ export async function middleware(request: NextRequest) {
   const isProtected =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/profile') ||
-    pathname.startsWith('/learn');
+    pathname.startsWith('/learn') ||
+    pathname.startsWith('/admin');
 
   const isAuthGate = pathname === '/login' || pathname === '/signup';
 

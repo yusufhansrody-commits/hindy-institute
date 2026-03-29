@@ -1,5 +1,9 @@
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { displayNameFromUser, initialsFromUser } from '@/lib/auth/display-name';
+import { ABC_CURRICULUM } from '@/data/abc-curriculum';
+import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { fetchAllCompletionsForUser } from '@/lib/progress/lesson-completions';
+import { totalXpFromCompletions } from '@/lib/progress/total-xp';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -31,6 +35,47 @@ export default async function ProfilePage() {
   const initials = initialsFromUser(user);
   const firstDefault = meta.first_name ?? '';
   const lastDefault = meta.last_name ?? '';
+
+  const completions = await fetchAllCompletionsForUser(user.id);
+  const totalXp = totalXpFromCompletions(completions);
+  const lessonsDoneTotal = completions.length;
+
+  const abcTotal = ABC_CURRICULUM.length;
+  const masteryTotal = MASTERY_CURRICULUM.length;
+  const abcIds = new Set(completions.filter((c) => c.program === 'abc').map((c) => c.lesson_id));
+  const masteryIds = new Set(completions.filter((c) => c.program === 'mastery').map((c) => c.lesson_id));
+  const abcDone = abcIds.size;
+  const masteryDone = masteryIds.size;
+  const abcPct = abcTotal ? Math.round((abcDone / abcTotal) * 100) : 0;
+  const masteryPct = masteryTotal ? Math.round((masteryDone / masteryTotal) * 100) : 0;
+  const abcResume = ABC_CURRICULUM.find((l) => !abcIds.has(l.id))?.id ?? (abcDone > 0 ? abcTotal : 0);
+  const masteryResume =
+    MASTERY_CURRICULUM.find((l) => !masteryIds.has(l.id))?.id ?? (masteryDone > 0 ? masteryTotal : 0);
+
+  const courseRows = [
+    {
+      name: "Arabic ABC's",
+      pct: abcPct,
+      current: abcDone,
+      total: abcTotal,
+      href: '/learn/abc',
+      resumeId: abcResume,
+    },
+    {
+      name: 'Arabic Mastery',
+      pct: masteryPct,
+      current: masteryDone,
+      total: masteryTotal,
+      href: '/learn/mastery',
+      resumeId: masteryResume,
+    },
+  ];
+
+  const achievements = ACHIEVEMENTS.map((a) => {
+    if (a.name === 'First Steps') return { ...a, earned: lessonsDoneTotal > 0 };
+    if (a.name === 'ABC Complete') return { ...a, earned: abcTotal > 0 && abcDone >= abcTotal };
+    return a;
+  });
 
   return (
     <div style={{ background: 'var(--parchment)', minHeight: 'calc(100vh - 68px)' }}>
@@ -88,10 +133,10 @@ export default async function ProfilePage() {
             }}
           >
             {[
-              { num: '1,240', label: 'Total XP' },
-              { num: '7', label: 'Day Streak 🔥' },
-              { num: '5', label: 'Lessons Done' },
-              { num: '84%', label: 'Avg. Quiz Score' },
+              { num: totalXp.toLocaleString(), label: 'Total XP' },
+              { num: '—', label: 'Day Streak 🔥' },
+              { num: String(lessonsDoneTotal), label: 'Lessons Done' },
+              { num: '—', label: 'Avg. Quiz Score' },
             ].map((s, i) => (
               <div
                 key={s.label}
@@ -203,10 +248,7 @@ export default async function ProfilePage() {
             >
               📚 Course Progress
             </div>
-            {[
-              { name: "Arabic ABC's", pct: 7, current: 1, total: 14, href: '/learn/abc' },
-              { name: 'Arabic Mastery', pct: 0, current: 0, total: 60, href: '/learn/mastery' },
-            ].map((course) => (
+            {courseRows.map((course) => (
               <div key={course.name} className="prog-course">
                 <div className="prog-course-header">
                   <div className="prog-course-name">{course.name}</div>
@@ -216,10 +258,19 @@ export default async function ProfilePage() {
                   <div className="prog-fill" style={{ width: `${course.pct}%` }} />
                 </div>
                 <div className="prog-lesson-label">
-                  {course.current === 0 ? 'Not started' : `Lesson ${course.current}`} · {course.total} lessons total
+                  {course.current === 0
+                    ? 'Not started'
+                    : course.current >= course.total
+                      ? 'All lessons complete'
+                      : `Next: lesson ${course.resumeId}`}{' '}
+                  · {course.total} lessons total
                 </div>
-                <Link href={course.href} className="btn btn-primary btn-sm" style={{ marginTop: '10px', display: 'inline-flex' }}>
-                  {course.current === 0 ? 'Start' : 'Continue'} →
+                <Link
+                  href={`${course.href}/${course.resumeId || 1}`}
+                  className="btn btn-primary btn-sm"
+                  style={{ marginTop: '10px', display: 'inline-flex' }}
+                >
+                  {course.current === 0 ? 'Start' : course.current >= course.total ? 'Review' : 'Continue'} →
                 </Link>
               </div>
             ))}
@@ -240,7 +291,7 @@ export default async function ProfilePage() {
               🏆 Achievements
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              {ACHIEVEMENTS.map((a) => (
+              {achievements.map((a) => (
                 <div
                   key={a.name}
                   className={`achievement ${a.earned ? 'earned' : 'locked'}`}

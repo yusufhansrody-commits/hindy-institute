@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "extract:data": "node scripts/extract-data.mjs",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "db:migrate": "node --env-file=.env scripts/apply-migration.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
@@ -27,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "pg": "^8.20.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"

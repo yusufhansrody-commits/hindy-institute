@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { displayNameFromUser } from '@/lib/auth/display-name';
+import { fetchAllCompletionsForUser } from '@/lib/progress/lesson-completions';
+import { totalXpFromCompletions } from '@/lib/progress/total-xp';
 import { createClient } from '@/lib/supabase/server';
 
 const LEADERBOARD = [
@@ -34,6 +36,10 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   const greet = displayNameFromUser(user);
 
+  const completions = user ? await fetchAllCompletionsForUser(user.id) : [];
+  const lessonsDone = completions.length;
+  const totalXp = totalXpFromCompletions(completions);
+
   return (
     <div style={{ background: 'var(--parchment)', minHeight: 'calc(100vh - 68px)' }}>
       <div className="dash-inner">
@@ -62,11 +68,11 @@ export default async function DashboardPage() {
         {/* ── Quick Stats ── */}
         <div className="quick-stats" style={{ marginBottom: '28px' }}>
           <div className="stat-mini">
-            <div className="stat-mini-num">1,240</div>
+            <div className="stat-mini-num">{totalXp.toLocaleString()}</div>
             <div className="stat-mini-label">Total XP</div>
           </div>
           <div className="stat-mini">
-            <div className="stat-mini-num">5</div>
+            <div className="stat-mini-num">{lessonsDone}</div>
             <div className="stat-mini-label">Lessons Done</div>
           </div>
           <div className="stat-mini">

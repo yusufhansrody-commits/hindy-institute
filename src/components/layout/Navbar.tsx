@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { isStaffRole } from '@/lib/auth/staff';
 import type { User } from '@supabase/supabase-js';
 import { SiteLogo } from '@/components/layout/SiteLogo';
 import Link from 'next/link';
@@ -9,22 +10,36 @@ import { useEffect, useState } from 'react';
 
 type NavbarProps = {
   initialUser: User | null;
+  initialRole?: string | null;
 };
 
-export function Navbar({ initialUser }: NavbarProps) {
+export function Navbar({ initialUser, initialRole = null }: NavbarProps) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(initialUser);
+  const [role, setRole] = useState<string | null>(initialRole);
 
   useEffect(() => {
     setUser(initialUser);
-  }, [initialUser]);
+    setRole(initialRole);
+  }, [initialUser, initialRole]);
 
   useEffect(() => {
     const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      if (!nextUser) {
+        setRole(null);
+        return;
+      }
+      const { data, error } = await supabase.from('profiles').select('role').eq('id', nextUser.id).maybeSingle();
+      if (!error && data?.role) {
+        setRole(data.role as string);
+      } else {
+        setRole(null);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -42,6 +57,11 @@ export function Navbar({ initialUser }: NavbarProps) {
         </Link>
         {user ? (
           <>
+            {isStaffRole(role) ? (
+              <Link href="/admin" className={`nav-link ${pathname?.startsWith('/admin') ? 'active' : ''}`}>
+                Admin
+              </Link>
+            ) : null}
             <Link href="/dashboard" className={`nav-link ${pathname === '/dashboard' ? 'active' : ''}`}>
               Dashboard
             </Link>

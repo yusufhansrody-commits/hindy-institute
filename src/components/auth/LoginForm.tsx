@@ -1,5 +1,6 @@
 'use client';
 
+import { humanizeAuthClientError } from '@/lib/auth/fetch-error-message';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -37,11 +38,14 @@ export function LoginForm() {
       const supabase = createClient();
       const { error: signError } = await supabase.auth.signInWithPassword({ email, password });
       if (signError) {
-        setError(signError.message);
+        setError(humanizeAuthClientError(signError.message));
         return;
       }
       router.refresh();
       router.push(next);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(humanizeAuthClientError(msg));
     } finally {
       setLoading(false);
     }

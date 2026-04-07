@@ -1,5 +1,6 @@
 'use client';
 
+import { humanizeAuthClientError } from '@/lib/auth/fetch-error-message';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -41,7 +42,7 @@ export function SignupForm() {
         },
       });
       if (signError) {
-        setError(signError.message);
+        setError(humanizeAuthClientError(signError.message));
         return;
       }
       if (data.user && !data.session) {
@@ -52,6 +53,9 @@ export function SignupForm() {
         router.refresh();
         router.push('/dashboard');
       }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(humanizeAuthClientError(msg));
     } finally {
       setLoading(false);
     }

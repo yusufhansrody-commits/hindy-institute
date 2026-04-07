@@ -35,7 +35,11 @@ export function Navbar({ initialUser, initialRole = null }: NavbarProps) {
         return;
       }
       const { data, error } = await supabase.from('profiles').select('role').eq('id', nextUser.id).maybeSingle();
-      if (!error && data?.role) {
+      if (error) {
+        // Keep server-provided role; client fetch often fails transiently (e.g. Safari "Load failed").
+        return;
+      }
+      if (data?.role) {
         setRole(data.role as string);
       } else {
         setRole(null);

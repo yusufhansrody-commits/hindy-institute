@@ -16,9 +16,13 @@ export function SignOutButton({ className, style, children }: SignOutButtonProps
 
   async function handleSignOut() {
     setLoading(true);
+    const supabase = createClient();
+    // Remote revocation can hang on flaky networks; always fall through to a local clear.
+    const remote = supabase.auth.signOut().catch(() => undefined);
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2500));
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      await Promise.race([remote, timeout]);
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       router.refresh();
       router.push('/');
     } finally {

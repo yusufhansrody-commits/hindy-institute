@@ -1,3 +1,4 @@
+import { LessonImportForm } from '@/components/admin/LessonImportForm';
 import Link from 'next/link';
 
 export default function AdminLessonsPage() {
@@ -15,9 +16,12 @@ export default function AdminLessonsPage() {
         Lessons
       </h1>
       <p style={{ color: 'var(--text-mid)', marginBottom: '20px', maxWidth: '560px', lineHeight: 1.7 }}>
-        Lesson content still lives in the codebase (<code style={{ fontSize: '0.85em' }}>src/data/*-curriculum.ts</code>).
-        Next step is moving metadata (titles, order, publish state) into Supabase so you can edit without deploys.
+        Core lesson shell (video, quiz bank, XP) still comes from{' '}
+        <code style={{ fontSize: '0.85em' }}>src/data/*-curriculum.ts</code>. You can attach an optional{' '}
+        <strong>imported JSON pack</strong> per lesson in Supabase (objectives, slides, etc.) — learners see it on the
+        lesson page after you run the <code style={{ fontSize: '0.85em' }}>lesson_imports</code> migration.
       </p>
+      <LessonImportForm />
       <ul style={{ color: 'var(--text-dark)', lineHeight: 1.8, paddingLeft: '20px' }}>
         <li>
           <Link href="/learn/abc" style={{ color: 'var(--navy)', fontWeight: 600 }}>

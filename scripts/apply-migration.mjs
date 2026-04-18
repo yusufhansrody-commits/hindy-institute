@@ -1,16 +1,16 @@
 /**
- * Applies supabase/migrations SQL.
+ * Applies all SQL files in supabase/migrations (sorted by name).
  * Prefer DATABASE_MIGRATE_URL (Session pooler, IPv4). Fallback: DATABASE_URL.
  * Run: npm run db:migrate
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-const migrationFile = join(root, 'supabase/migrations/20260329200000_profiles_and_progress.sql');
+const migrationsDir = join(root, 'supabase', 'migrations');
 
 const connectionString = process.env.DATABASE_MIGRATE_URL || process.env.DATABASE_URL;
 if (!connectionString) {
@@ -22,7 +22,10 @@ if (!process.env.DATABASE_MIGRATE_URL && process.env.DATABASE_URL) {
   console.warn('Using DATABASE_URL (direct). If EHOSTUNREACH, set DATABASE_MIGRATE_URL (Session pooler).\n');
 }
 
-const sql = readFileSync(migrationFile, 'utf8');
+const files = readdirSync(migrationsDir)
+  .filter((f) => f.endsWith('.sql'))
+  .sort();
+
 const client = new pg.Client({
   connectionString,
   ssl: { rejectUnauthorized: false },
@@ -30,8 +33,12 @@ const client = new pg.Client({
 
 try {
   await client.connect();
-  await client.query(sql);
-  console.log('Migration applied successfully.');
+  for (const name of files) {
+    const sql = readFileSync(join(migrationsDir, name), 'utf8');
+    process.stdout.write(`Applying ${name} …\n`);
+    await client.query(sql);
+  }
+  console.log('All migrations applied successfully.');
 } catch (e) {
   const msg = e instanceof Error ? e.message : String(e);
   console.error(msg);

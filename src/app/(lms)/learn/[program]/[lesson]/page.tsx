@@ -1,9 +1,12 @@
+import { GreetingExposureMap } from '@/components/lesson/GreetingExposureMap';
+import { ImportedLessonSection } from '@/components/lesson/ImportedLessonSection';
 import { MarkLessonCompleteButton } from '@/components/lesson/MarkLessonCompleteButton';
 import { ArabicText } from '@/components/arabic/ArabicText';
 import { VocabCard } from '@/components/arabic/VocabCard';
 import { LessonStepper } from '@/components/lesson/LessonStepper';
 import { ABC_CURRICULUM } from '@/data/abc-curriculum';
 import { MASTERY_CURRICULUM } from '@/data/mastery-curriculum';
+import { fetchLessonImportPayload } from '@/lib/lesson-imports/fetch-import';
 import { createClient } from '@/lib/supabase/server';
 import { fetchCompletedLessonIds } from '@/lib/progress/lesson-completions';
 import Link from 'next/link';
@@ -27,6 +30,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
   const prog = isAbc ? 'abc' : 'mastery';
+  const lessonImport = await fetchLessonImportPayload(supabase, prog, lessonId);
   const completedIds = user ? await fetchCompletedLessonIds(user.id, prog) : new Set<number>();
   const completedCount = completedIds.size;
   const totalLessons = lessons.length;
@@ -125,6 +129,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
           </div>
 
           <div className="lesson-panel-body">
+            {lessonImport ? <ImportedLessonSection payload={lessonImport} /> : null}
+
             {/* Steps */}
             <div style={{ marginBottom: '32px' }}>
               <LessonStepper steps={steps} />
@@ -145,6 +151,26 @@ export default async function LessonPage({ params }: LessonPageProps) {
             )}
 
             {/* ABC Letter Forms */}
+            {!isAbc && lessonId === 1 && (
+              <div style={{ marginBottom: '32px' }}>
+                <h2
+                  style={{
+                    fontFamily: 'var(--font-cormorant, Cormorant Garamond, serif)',
+                    fontSize: '1.4rem',
+                    color: 'var(--navy)',
+                    marginBottom: '12px',
+                  }}
+                >
+                  🗺️ Regional greetings map
+                </h2>
+                <p style={{ color: 'var(--text-mid)', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.55 }}>
+                  MSA is the focus of this course; tap a region to hear a sample. Dialect phrases are for exposure
+                  only — you will not be tested on them.
+                </p>
+                <GreetingExposureMap />
+              </div>
+            )}
+
             {isAbc && 'letterForms' in entry && entry.letterForms.length > 0 && (
               <div style={{ marginBottom: '32px' }}>
                 <h2 style={{ fontFamily: 'var(--font-cormorant, Cormorant Garamond, serif)', fontSize: '1.4rem', color: 'var(--navy)', marginBottom: '16px' }}>

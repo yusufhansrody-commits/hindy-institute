@@ -34,6 +34,8 @@ export function LessonImportForm() {
       } else {
         setError(res.error);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error — check the browser console.');
     } finally {
       setLoading(false);
     }
